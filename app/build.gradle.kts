@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.google.services) // Copiar esto
 }
 
 android {
@@ -59,6 +60,12 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    // Firebase dependencies
+    implementation(platform(libs.firebase.bom)) // Copiar esto
+    implementation(libs.firebase.analytics) // Copiar esto
+    implementation(libs.firebase.realtimedb) // Copiar esto
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
