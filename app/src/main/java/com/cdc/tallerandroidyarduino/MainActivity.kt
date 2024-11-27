@@ -21,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +37,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,7 +51,6 @@ import com.google.firebase.database.getValue
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class MainActivity : ComponentActivity() {
 
@@ -66,23 +65,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun saveDistance(context: Context, distance: Int) {
-        val database = realtimeDB.getReference(SENSOR_REFERENCE).child(DETECTION_DISTANCE_REFERENCE)
+    private fun saveDistance(context: Context, distance: Int) {
+        val database = realtimeDB.getReference("detectionDistance")
         database
             .setValue(distance)
             .addOnSuccessListener {
-                Toast.makeText(context, "Se guardo la distancia", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Se guardo la distancia de deteccción", Toast.LENGTH_SHORT).show()
             }.addOnFailureListener {
                 Toast.makeText(
                     context,
-                    "Ocurrio un error al guardar la distancia",
+                    "Ocurrio un error al guardar la distancia de deteccción",
                     Toast.LENGTH_SHORT
                 ).show()
-            }.await()
+            }
     }
 
     private fun listenLedStateDataFromFirebase(onDataChange: (Boolean) -> Unit) {
-        val database = realtimeDB.getReference(SENSOR_REFERENCE).child(LED_STATE_REFERENCE)
+        val database = realtimeDB.getReference("ledState")
         val greetingValueEventListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val ledStater: Boolean = snapshot.getValue<Boolean>() ?: false
@@ -98,7 +97,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun listenCurrentDistanceDataFromFirebase(onDataChange: (Int) -> Unit) {
-        val database = realtimeDB.getReference(SENSOR_REFERENCE).child(CURRENT_DISTANCE_REFERENCE)
+        val database = realtimeDB.getReference("currentDistance")
         val greetingValueEventListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val currentDistance: Int = snapshot.getValue<Int>() ?: 0
@@ -106,18 +105,11 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                onDataChange(-1)
+                onDataChange(0)
             }
 
         }
         database.addValueEventListener(greetingValueEventListener)
-    }
-
-    companion object {
-        const val SENSOR_REFERENCE = "sensor"
-        const val CURRENT_DISTANCE_REFERENCE = "currentDistance"
-        const val LED_STATE_REFERENCE = "ledState"
-        const val DETECTION_DISTANCE_REFERENCE = "detectionDistance"
     }
 
     @Composable
@@ -142,80 +134,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .padding(innerPadding)
                         .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val image =
-                        if (ledStateData) R.drawable.led_green else R.drawable.led
-                    Image(
-                        modifier = Modifier.size(150.dp),
-                        painter = painterResource(id = image),
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text(
-                        text = "Distancia detectada por el sensor:",
-                        color = Color.Gray,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 22.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "$currentDistanceData cm",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 50.sp
-                    )
-                    Spacer(modifier = Modifier.height(30.dp))
-                    var detectionDistance by remember {
-                        mutableStateOf("")
-                    }
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .padding(horizontal = 12.dp)
-                            .fillMaxWidth(),
-                        value = detectionDistance,
-                        onValueChange = {
-                            detectionDistance = it
-                        },
-                        label = {
-                            Text(text = "Distancia de detección en cm")
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        textStyle = TextStyle(color = Color.Black)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Button(
-                        modifier = Modifier
-                            .padding(horizontal = 12.dp)
-                            .fillMaxWidth(),
-                        onClick = {
-                            lifecycleScope.launch {
-                                if (detectionDistance.isNotEmpty()) {
-                                    saveDistance(context, detectionDistance.toInt())
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Debes ingresar un valor",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-                        }
-                    ) {
-                        Text(text = "Guardar distancia")
-                    }
-                    Spacer(modifier = Modifier.size(24.dp))
-                    Text(
-                        text = "Powered by CDC",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "Taller de IOT con Android y Arduino")
                 }
             }
         }
